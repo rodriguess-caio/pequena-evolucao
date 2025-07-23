@@ -47,9 +47,9 @@ export default function RegisterPage() {
         subtitle="Verifique seu e-mail para confirmar sua conta"
       >
         <div className="text-center space-y-6">
-          <div className="w-16 h-16 bg-pequena-verde/20 rounded-full flex items-center justify-center mx-auto">
+          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
             <svg className="w-8 h-8 text-pequena-verde" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
           </div>
           

@@ -1,12 +1,12 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { Textarea } from '@/components/ui/Textarea'
+import { FormCard, FormField, FormRow } from '@/components/ui/FormCard'
+import { DashboardLayout } from '@/components/layout/DashboardLayout'
 import { medicoUpdateSchema, type MedicoUpdateFormData } from '@/lib/validations/medico'
 
 interface Medico {
@@ -21,12 +21,16 @@ interface Medico {
   updated_at: string
 }
 
-export default function EditarMedicoPage({ params }: { params: { id: string } }) {
+export default function EditarMedicoPage() {
   const [medico, setMedico] = useState<Medico | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
+  const [user, setUser] = useState<any>(null)
   const router = useRouter()
+  const params = useParams()
+  const medicoId = params.id as string
 
   const {
     register,
@@ -38,33 +42,55 @@ export default function EditarMedicoPage({ params }: { params: { id: string } })
   })
 
   useEffect(() => {
-    fetchMedico()
-  }, [params.id])
-
-  const fetchMedico = async () => {
-    try {
-      const response = await fetch(`/api/medicos/${params.id}`)
-      if (response.ok) {
-        const data = await response.json()
-        setMedico(data.medico)
-        reset(data.medico)
-      } else {
-        setError('Médico não encontrado')
+    const checkUser = async () => {
+      try {
+        const response = await fetch('/api/auth/profile')
+        if (response.ok) {
+          const data = await response.json()
+          setUser(data.user)
+        } else {
+          router.push('/')
+        }
+      } catch (error) {
+        console.error('Erro ao verificar usuário:', error)
+        router.push('/')
       }
-    } catch (error) {
-      console.error('Erro ao buscar médico:', error)
-      setError('Erro ao carregar médico')
-    } finally {
-      setLoading(false)
     }
-  }
+
+    checkUser()
+  }, [router])
+
+  useEffect(() => {
+    const fetchMedico = async () => {
+      try {
+        const response = await fetch(`/api/medicos/${medicoId}`)
+        if (response.ok) {
+          const data = await response.json()
+          setMedico(data.medico)
+          reset(data.medico)
+        } else {
+          setError('Médico não encontrado')
+        }
+      } catch (error) {
+        console.error('Erro ao buscar médico:', error)
+        setError('Erro ao carregar médico')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    if (user && medicoId) {
+      fetchMedico()
+    }
+  }, [user, medicoId, reset])
 
   const onSubmit = async (data: MedicoUpdateFormData) => {
     setSaving(true)
     setError('')
+    setSuccess('')
 
     try {
-      const response = await fetch(`/api/medicos/${params.id}`, {
+      const response = await fetch(`/api/medicos/${medicoId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -73,7 +99,12 @@ export default function EditarMedicoPage({ params }: { params: { id: string } })
       })
 
       if (response.ok) {
-        router.push('/medicos')
+        setSuccess('Médico atualizado com sucesso!')
+        const result = await response.json()
+        setMedico(result.medico)
+        setTimeout(() => {
+          router.push('/medicos')
+        }, 1500)
       } else {
         const errorData = await response.json()
         setError(errorData.error || 'Erro ao atualizar médico')
@@ -86,6 +117,12 @@ export default function EditarMedicoPage({ params }: { params: { id: string } })
     }
   }
 
+  const DoctorIcon = () => (
+    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+    </svg>
+  )
+
   if (loading) {
     return (
       <div className="min-h-screen bg-pequena-background flex items-center justify-center">
@@ -97,166 +134,134 @@ export default function EditarMedicoPage({ params }: { params: { id: string } })
     )
   }
 
-  if (error && !medico) {
+  if (!user) {
     return (
       <div className="min-h-screen bg-pequena-background flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-            </svg>
-          </div>
-          <h3 className="text-lg font-semibold text-gray-800 mb-2">Erro</h3>
-          <p className="text-gray-600 mb-6">{error}</p>
-          <Button onClick={() => router.push('/medicos')}>
-            Voltar aos Médicos
-          </Button>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pequena-secundaria mx-auto mb-4"></div>
+          <p className="text-gray-600">Carregando...</p>
         </div>
       </div>
     )
   }
 
-  return (
-    <div className="min-h-screen bg-pequena-background">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="bg-pequena-background rounded-2xl shadow-lg border border-pequena-secundaria/20 p-6 mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-800 mb-2">
-                Editar Médico
-              </h1>
-              <p className="text-gray-600">
-                Atualize as informações do profissional de saúde
-              </p>
+  if (error && !medico) {
+    return (
+      <DashboardLayout user={user}>
+        <div className="p-6">
+          <div className="max-w-2xl mx-auto">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+              <h2 className="text-lg font-semibold text-red-800 mb-2">
+                Erro ao carregar médico
+              </h2>
+              <p className="text-red-600 mb-4">{error}</p>
+              <button
+                onClick={() => router.push('/medicos')}
+                className="bg-pequena-secundaria text-white px-4 py-2 rounded-lg hover:bg-opacity-90 transition-colors"
+              >
+                Voltar aos Médicos
+              </button>
             </div>
-
-            <Button
-              variant="outline"
-              onClick={() => router.push('/medicos')}
-            >
-              Voltar aos Médicos
-            </Button>
           </div>
         </div>
+      </DashboardLayout>
+    )
+  }
 
-        {/* Form */}
-        <div className="max-w-2xl mx-auto">
-          <div className="bg-pequena-background rounded-2xl shadow-lg border border-pequena-secundaria/20 p-8">
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-              {/* Error Message */}
-              {error && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <p className="text-red-600">{error}</p>
-                </div>
-              )}
+  return (
+    <DashboardLayout 
+      user={user}
+      title={`Editar ${medico?.nome}`}
+      subtitle="Atualize as informações do médico"
+    >
+      <div className="p-6">
+        <FormCard
+          title={`Editar ${medico?.nome}`}
+          subtitle="Atualize as informações do médico"
+          icon={<DoctorIcon />}
+          iconBgColor="bg-blue-100"
+          iconColor="text-blue-600"
+          onSubmit={handleSubmit(onSubmit)}
+          onCancel={() => router.push('/medicos')}
+          submitLabel={saving ? 'Salvando...' : 'Salvar Alterações'}
+          cancelLabel="Cancelar"
+          loading={saving}
+        >
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg mb-6">
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
+          )}
 
-              {/* Nome */}
-              <div>
-                <label htmlFor="nome" className="block text-sm font-medium text-gray-700 mb-2">
-                  Nome Completo *
-                </label>
+          {success && (
+            <div className="p-3 bg-green-50 border border-green-200 rounded-lg mb-6">
+              <p className="text-sm text-green-600">{success}</p>
+            </div>
+          )}
+
+          {/* Informações Básicas */}
+          <div>
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">
+              Informações Básicas
+            </h3>
+            
+            <FormRow>
+              <FormField label="Nome Completo" required error={errors.nome?.message}>
                 <Input
-                  id="nome"
-                  type="text"
                   placeholder="Ex: Dr. João Silva"
                   {...register('nome')}
-                  error={errors.nome?.message}
                 />
-              </div>
+              </FormField>
 
-              {/* Especialidade */}
-              <div>
-                <label htmlFor="especialidade" className="block text-sm font-medium text-gray-700 mb-2">
-                  Especialidade *
-                </label>
+              <FormField label="Especialidade" required error={errors.especialidade?.message}>
                 <Input
-                  id="especialidade"
-                  type="text"
                   placeholder="Ex: Pediatria, Cardiologia, etc."
                   {...register('especialidade')}
-                  error={errors.especialidade?.message}
                 />
-              </div>
+              </FormField>
 
-              {/* CRM */}
-              <div>
-                <label htmlFor="crm" className="block text-sm font-medium text-gray-700 mb-2">
-                  CRM (opcional)
-                </label>
+              <FormField label="CRM" error={errors.crm?.message}>
                 <Input
-                  id="crm"
-                  type="text"
                   placeholder="Ex: 12345-SP"
                   {...register('crm')}
-                  error={errors.crm?.message}
                 />
-              </div>
+              </FormField>
 
-              {/* Telefone */}
-              <div>
-                <label htmlFor="telefone" className="block text-sm font-medium text-gray-700 mb-2">
-                  Telefone *
-                </label>
+              <FormField label="Telefone" required error={errors.telefone?.message}>
                 <Input
-                  id="telefone"
                   type="tel"
                   placeholder="Ex: (11) 99999-9999"
                   {...register('telefone')}
-                  error={errors.telefone?.message}
                 />
-              </div>
+              </FormField>
+            </FormRow>
+          </div>
 
-              {/* Email */}
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                  E-mail (opcional)
-                </label>
+          {/* Informações de Contato */}
+          <div>
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">
+              Informações de Contato
+            </h3>
+            
+            <FormRow>
+              <FormField label="E-mail" error={errors.email?.message}>
                 <Input
-                  id="email"
                   type="email"
                   placeholder="Ex: joao.silva@email.com"
                   {...register('email')}
-                  error={errors.email?.message}
                 />
-              </div>
+              </FormField>
 
-              {/* Endereço */}
-              <div>
-                <label htmlFor="endereco" className="block text-sm font-medium text-gray-700 mb-2">
-                  Endereço (opcional)
-                </label>
-                <Textarea
-                  id="endereco"
+              <FormField label="Endereço" error={errors.endereco?.message}>
+                <Input
                   placeholder="Ex: Rua das Flores, 123 - Centro - São Paulo/SP"
                   {...register('endereco')}
-                  error={errors.endereco?.message}
                 />
-              </div>
-
-              {/* Submit Button */}
-              <div className="flex gap-4 pt-6">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => router.push('/medicos')}
-                  className="flex-1"
-                >
-                  Cancelar
-                </Button>
-                
-                <Button
-                  type="submit"
-                  loading={saving}
-                  className="flex-1"
-                >
-                  {saving ? 'Salvando...' : 'Salvar Alterações'}
-                </Button>
-              </div>
-            </form>
+              </FormField>
+            </FormRow>
           </div>
-        </div>
+        </FormCard>
       </div>
-    </div>
+    </DashboardLayout>
   )
 } 

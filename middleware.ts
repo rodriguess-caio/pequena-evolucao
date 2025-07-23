@@ -11,7 +11,14 @@ export async function middleware(req: NextRequest) {
   } = await supabase.auth.getSession()
 
   // Proteger rotas autenticadas
-  const protectedRoutes = ['/profile', '/bebes', '/exames']
+  const protectedRoutes = [
+    '/profile', 
+    '/bebes', 
+    '/medicos', 
+    '/consultas', 
+    '/desenvolvimento',
+    '/dashboard'
+  ]
   const isProtectedRoute = protectedRoutes.some(route => 
     req.nextUrl.pathname.startsWith(route)
   )
@@ -30,5 +37,15 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public folder
+     */
+    '/((?!api|_next/static|_next/image|favicon.ico|public).*)',
+  ],
 } 

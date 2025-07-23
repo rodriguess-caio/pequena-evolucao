@@ -4,9 +4,10 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Textarea } from '@/components/ui/Textarea'
+import { FormCard, FormField, FormRow } from '@/components/ui/FormCard'
+import { DashboardLayout } from '@/components/layout/DashboardLayout'
 import { consultaSchema, type ConsultaFormData } from '@/lib/validations/consulta'
 
 interface Bebe {
@@ -26,6 +27,7 @@ export default function NovaConsultaPage() {
   const [loading, setLoading] = useState(false)
   const [loadingData, setLoadingData] = useState(true)
   const [error, setError] = useState('')
+  const [user, setUser] = useState<any>(null)
   const router = useRouter()
 
   const {
@@ -37,8 +39,29 @@ export default function NovaConsultaPage() {
   })
 
   useEffect(() => {
-    fetchData()
-  }, [])
+    const checkUser = async () => {
+      try {
+        const response = await fetch('/api/auth/profile')
+        if (response.ok) {
+          const data = await response.json()
+          setUser(data.user)
+        } else {
+          router.push('/')
+        }
+      } catch (error) {
+        console.error('Erro ao verificar usuário:', error)
+        router.push('/')
+      }
+    }
+
+    checkUser()
+  }, [router])
+
+  useEffect(() => {
+    if (user) {
+      fetchData()
+    }
+  }, [user])
 
   const fetchData = async () => {
     try {
@@ -91,6 +114,12 @@ export default function NovaConsultaPage() {
     }
   }
 
+  const CalendarIcon = () => (
+    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+    </svg>
+  )
+
   if (loadingData) {
     return (
       <div className="min-h-screen bg-pequena-background flex items-center justify-center">
@@ -106,9 +135,9 @@ export default function NovaConsultaPage() {
     return (
       <div className="min-h-screen bg-pequena-background flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 bg-pequena-azul/20 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg className="w-8 h-8 text-pequena-azul" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
           </div>
           <h3 className="text-lg font-semibold text-gray-800 mb-2">
@@ -117,9 +146,12 @@ export default function NovaConsultaPage() {
           <p className="text-gray-600 mb-6">
             Você precisa cadastrar um bebê antes de agendar consultas.
           </p>
-          <Button onClick={() => router.push('/bebes/novo')}>
+          <button
+            onClick={() => router.push('/bebes/novo')}
+            className="bg-pequena-secundaria text-white px-4 py-2 rounded-lg hover:bg-opacity-90 transition-colors"
+          >
             Cadastrar Bebê
-          </Button>
+          </button>
         </div>
       </div>
     )
@@ -129,7 +161,7 @@ export default function NovaConsultaPage() {
     return (
       <div className="min-h-screen bg-pequena-background flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 bg-pequena-azul/20 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg className="w-8 h-8 text-pequena-azul" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
@@ -140,58 +172,51 @@ export default function NovaConsultaPage() {
           <p className="text-gray-600 mb-6">
             Você precisa cadastrar um médico antes de agendar consultas.
           </p>
-          <Button onClick={() => router.push('/medicos/novo')}>
+          <button
+            onClick={() => router.push('/medicos/novo')}
+            className="bg-pequena-secundaria text-white px-4 py-2 rounded-lg hover:bg-opacity-90 transition-colors"
+          >
             Cadastrar Médico
-          </Button>
+          </button>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-pequena-background">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="bg-pequena-background rounded-2xl shadow-lg border border-pequena-secundaria/20 p-6 mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-800 mb-2">
-                Agendar Consulta
-              </h1>
-              <p className="text-gray-600">
-                Agende uma nova consulta médica para seu bebê
-              </p>
+    <DashboardLayout 
+      user={user}
+      title="Agendar Consulta"
+      subtitle="Agende uma nova consulta médica"
+    >
+      <div className="p-6">
+        <FormCard
+          icon={<CalendarIcon />}
+          iconBgColor="bg-blue-100"
+          iconColor="text-blue-600"
+          onSubmit={handleSubmit(onSubmit)}
+          onCancel={() => router.push('/consultas')}
+          submitLabel={loading ? 'Agendando...' : 'Agendar Consulta'}
+          cancelLabel="Cancelar"
+          loading={loading}
+        >
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg mb-6">
+              <p className="text-sm text-red-600">{error}</p>
             </div>
+          )}
 
-            <Button
-              variant="outline"
-              onClick={() => router.push('/consultas')}
-            >
-              Voltar às Consultas
-            </Button>
-          </div>
-        </div>
-
-        {/* Form */}
-        <div className="max-w-2xl mx-auto">
-          <div className="bg-pequena-background rounded-2xl shadow-lg border border-pequena-secundaria/20 p-8">
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-              {/* Error Message */}
-              {error && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <p className="text-red-600">{error}</p>
-                </div>
-              )}
-
-              {/* Bebê */}
-              <div>
-                <label htmlFor="bebe_id" className="block text-sm font-medium text-gray-700 mb-2">
-                  Bebê *
-                </label>
+          {/* Seleção de Bebê e Médico */}
+          <div>
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">
+              Seleção de Participantes
+            </h3>
+            
+            <FormRow>
+              <FormField label="Bebê" required error={errors.bebe_id?.message}>
                 <select
-                  id="bebe_id"
                   {...register('bebe_id')}
-                  className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pequena-azul focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-pequena-background focus:ring-2 focus:ring-pequena-secundaria focus:border-transparent transition-colors duration-200"
                 >
                   <option value="">Selecione um bebê</option>
                   {bebes.map((bebe) => (
@@ -200,20 +225,12 @@ export default function NovaConsultaPage() {
                     </option>
                   ))}
                 </select>
-                {errors.bebe_id && (
-                  <p className="mt-1 text-sm text-red-600">{errors.bebe_id.message}</p>
-                )}
-              </div>
+              </FormField>
 
-              {/* Médico */}
-              <div>
-                <label htmlFor="medico_id" className="block text-sm font-medium text-gray-700 mb-2">
-                  Médico *
-                </label>
+              <FormField label="Médico" required error={errors.medico_id?.message}>
                 <select
-                  id="medico_id"
                   {...register('medico_id')}
-                  className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pequena-azul focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-pequena-background focus:ring-2 focus:ring-pequena-secundaria focus:border-transparent transition-colors duration-200"
                 >
                   <option value="">Selecione um médico</option>
                   {medicos.map((medico) => (
@@ -222,87 +239,62 @@ export default function NovaConsultaPage() {
                     </option>
                   ))}
                 </select>
-                {errors.medico_id && (
-                  <p className="mt-1 text-sm text-red-600">{errors.medico_id.message}</p>
-                )}
-              </div>
+              </FormField>
+            </FormRow>
+          </div>
 
-              {/* Data */}
-              <div>
-                <label htmlFor="data_consulta" className="block text-sm font-medium text-gray-700 mb-2">
-                  Data da Consulta *
-                </label>
+          {/* Data e Hora */}
+          <div>
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">
+              Data e Horário
+            </h3>
+            
+            <FormRow>
+              <FormField label="Data da Consulta" required error={errors.data_consulta?.message}>
                 <Input
-                  id="data_consulta"
                   type="date"
                   {...register('data_consulta')}
-                  error={errors.data_consulta?.message}
                 />
-              </div>
+              </FormField>
 
-              {/* Hora */}
-              <div>
-                <label htmlFor="hora_consulta" className="block text-sm font-medium text-gray-700 mb-2">
-                  Horário da Consulta *
-                </label>
+              <FormField label="Horário da Consulta" required error={errors.hora_consulta?.message}>
                 <Input
-                  id="hora_consulta"
                   type="time"
                   {...register('hora_consulta')}
-                  error={errors.hora_consulta?.message}
                 />
-              </div>
-
-              {/* Local */}
-              <div>
-                <label htmlFor="local" className="block text-sm font-medium text-gray-700 mb-2">
-                  Local da Consulta *
-                </label>
-                <Input
-                  id="local"
-                  type="text"
-                  placeholder="Ex: Consultório Dr. João Silva, Hospital ABC, etc."
-                  {...register('local')}
-                  error={errors.local?.message}
-                />
-              </div>
-
-              {/* Anotações */}
-              <div>
-                <label htmlFor="anotacoes" className="block text-sm font-medium text-gray-700 mb-2">
-                  Anotações (opcional)
-                </label>
-                <Textarea
-                  id="anotacoes"
-                  placeholder="Ex: Sintomas, observações importantes, etc."
-                  {...register('anotacoes')}
-                  error={errors.anotacoes?.message}
-                />
-              </div>
-
-              {/* Submit Button */}
-              <div className="flex gap-4 pt-6">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => router.push('/consultas')}
-                  className="flex-1"
-                >
-                  Cancelar
-                </Button>
-                
-                <Button
-                  type="submit"
-                  loading={loading}
-                  className="flex-1"
-                >
-                  {loading ? 'Agendando...' : 'Agendar Consulta'}
-                </Button>
-              </div>
-            </form>
+              </FormField>
+            </FormRow>
           </div>
-        </div>
+
+          {/* Local */}
+          <div>
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">
+              Local da Consulta
+            </h3>
+            
+            <FormField label="Local" required error={errors.local?.message}>
+              <Input
+                placeholder="Ex: Consultório Dr. João Silva, Hospital ABC, etc."
+                {...register('local')}
+              />
+            </FormField>
+          </div>
+
+          {/* Anotações */}
+          <div>
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">
+              Observações
+            </h3>
+            
+            <FormField label="Anotações (opcional)" error={errors.anotacoes?.message}>
+              <Textarea
+                placeholder="Ex: Sintomas, observações importantes, etc."
+                {...register('anotacoes')}
+              />
+            </FormField>
+          </div>
+        </FormCard>
       </div>
-    </div>
+    </DashboardLayout>
   )
 } 

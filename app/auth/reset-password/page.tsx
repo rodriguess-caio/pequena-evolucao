@@ -97,7 +97,7 @@ export default function ResetPasswordPage() {
         subtitle="Sua senha foi atualizada com sucesso"
       >
         <div className="text-center space-y-6">
-          <div className="w-16 h-16 bg-pequena-verde/20 rounded-full flex items-center justify-center mx-auto">
+          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
             <svg className="w-8 h-8 text-pequena-verde" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>

@@ -15,6 +15,16 @@ export const bebeSchema = z.object({
   nome_mae: z.string().min(2, 'Nome da mãe deve ter pelo menos 2 caracteres').max(100, 'Nome da mãe deve ter no máximo 100 caracteres'),
   nome_avo_paterno: z.string().min(2, 'Nome do avô paterno deve ter pelo menos 2 caracteres').max(100, 'Nome do avô paterno deve ter no máximo 100 caracteres').optional(),
   nome_avo_materno: z.string().min(2, 'Nome da avó materna deve ter pelo menos 2 caracteres').max(100, 'Nome da avó materna deve ter no máximo 100 caracteres').optional(),
+  peso_nascimento: z.string().optional().refine((val) => {
+    if (!val) return true
+    const num = parseFloat(val)
+    return !isNaN(num) && num >= 0.5 && num <= 6.0
+  }, 'Peso deve ser entre 0.5 e 6.0 kg'),
+  comprimento_nascimento: z.string().optional().refine((val) => {
+    if (!val) return true
+    const num = parseFloat(val)
+    return !isNaN(num) && num >= 30 && num <= 60
+  }, 'Comprimento deve ser entre 30 e 60 cm'),
 })
 
 export const bebeUpdateSchema = bebeSchema.extend({

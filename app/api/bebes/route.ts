@@ -90,6 +90,25 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // If peso and comprimento are provided, create initial development data
+    if (validatedData.peso_nascimento && validatedData.comprimento_nascimento) {
+      const { error: desenvolvimentoError } = await supabase
+        .from('desenvolvimento')
+        .insert({
+          bebe_id: bebe.id,
+          data_medicao: validatedData.data_nascimento,
+          idade_meses: 0, // At birth
+          peso_kg: validatedData.peso_nascimento,
+          comprimento_cm: validatedData.comprimento_nascimento,
+          observacoes: 'Medidas ao nascer'
+        })
+
+      if (desenvolvimentoError) {
+        console.error('Erro ao criar dados de desenvolvimento:', desenvolvimentoError)
+        // Don't fail the entire request, just log the error
+      }
+    }
+
     return NextResponse.json({
       message: 'Bebê criado com sucesso',
       bebe: bebe

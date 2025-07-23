@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/Button'
+import { DashboardLayout } from '@/components/layout/DashboardLayout'
+import { DataTable } from '@/components/ui/DataTable'
 
 interface Medico {
   id: string
@@ -21,11 +22,33 @@ export default function MedicosPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [user, setUser] = useState<any>(null)
   const router = useRouter()
 
   useEffect(() => {
-    fetchMedicos()
-  }, [])
+    const checkUser = async () => {
+      try {
+        const response = await fetch('/api/auth/profile')
+        if (response.ok) {
+          const data = await response.json()
+          setUser(data.user)
+        } else {
+          router.push('/')
+        }
+      } catch (error) {
+        console.error('Erro ao verificar usuário:', error)
+        router.push('/')
+      }
+    }
+
+    checkUser()
+  }, [router])
+
+  useEffect(() => {
+    if (user) {
+      fetchMedicos()
+    }
+  }, [user])
 
   const fetchMedicos = async () => {
     try {
@@ -44,19 +67,19 @@ export default function MedicosPage() {
     }
   }
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (medico: Medico) => {
     if (!confirm('Tem certeza que deseja deletar este médico? Esta ação é irreversível.')) {
       return
     }
 
-    setDeletingId(id)
+    setDeletingId(medico.id)
     try {
-      const response = await fetch(`/api/medicos/${id}`, {
+      const response = await fetch(`/api/medicos/${medico.id}`, {
         method: 'DELETE',
       })
 
       if (response.ok) {
-        setMedicos(medicos.filter(medico => medico.id !== id))
+        setMedicos(medicos.filter(m => m.id !== medico.id))
       } else {
         const data = await response.json()
         setError(data.error || 'Erro ao deletar médico')
@@ -68,6 +91,72 @@ export default function MedicosPage() {
       setDeletingId(null)
     }
   }
+
+  const handleEdit = (medico: Medico) => {
+    router.push(`/medicos/${medico.id}`)
+  }
+
+  const tableColumns = [
+    {
+      key: 'nome',
+      label: 'Médico',
+      render: (value: string, item: Medico) => (
+        <div>
+          <div className="font-medium text-gray-900">Dr. {value}</div>
+          {item.crm && (
+            <div className="text-sm text-gray-500">CRM: {item.crm}</div>
+          )}
+        </div>
+      )
+    },
+    {
+      key: 'especialidade',
+      label: 'Especialidade',
+      render: (value: string) => (
+        <span className="text-gray-900">{value}</span>
+      )
+    },
+    {
+      key: 'telefone',
+      label: 'Contato',
+      render: (value: string, item: Medico) => (
+        <div>
+          <div className="text-gray-900">{value}</div>
+          {item.email && (
+            <div className="text-sm text-gray-500">{item.email}</div>
+          )}
+        </div>
+      )
+    },
+    {
+      key: 'endereco',
+      label: 'Endereço',
+      render: (value: string) => (
+        <span className="text-gray-900">{value || 'Não informado'}</span>
+      )
+    },
+    {
+      key: 'created_at',
+      label: 'Cadastrado em',
+      render: (value: string) => (
+        <span className="text-gray-900">
+          {new Date(value).toLocaleDateString('pt-BR')}
+        </span>
+      )
+    }
+  ]
+
+  const DoctorIcon = () => (
+    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+    </svg>
+  )
+
+  const PlusIcon = () => (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+    </svg>
+  )
 
   if (loading) {
     return (
@@ -81,35 +170,21 @@ export default function MedicosPage() {
   }
 
   return (
-    <div className="min-h-screen bg-pequena-background">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="bg-pequena-background rounded-2xl shadow-lg border border-pequena-secundaria/20 p-6 mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-800 mb-2">
-                Meus Médicos
-              </h1>
-              <p className="text-gray-600">
-                Gerencie as informações dos profissionais de saúde
-              </p>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <Button
-                variant="outline"
-                onClick={() => router.push('/dashboard')}
-              >
-                Voltar ao Dashboard
-              </Button>
-
-              <Button
-                onClick={() => router.push('/medicos/novo')}
-              >
-                Adicionar Médico
-              </Button>
-            </div>
-          </div>
+    <DashboardLayout 
+      user={user}
+      title="Meus Médicos"
+      subtitle="Gerencie as informações dos profissionais de saúde"
+    >
+      <div className="p-6 max-w-7xl mx-auto">
+        {/* Action Button */}
+        <div className="mb-6 flex justify-end">
+          <button
+            onClick={() => router.push('/medicos/novo')}
+            className="bg-pequena-secundaria text-white px-4 py-2 rounded-lg hover:bg-opacity-90 transition-colors flex items-center gap-2"
+          >
+            <PlusIcon />
+            Adicionar Médico
+          </button>
         </div>
 
         {/* Error Message */}
@@ -119,114 +194,21 @@ export default function MedicosPage() {
           </div>
         )}
 
-        {/* Médicos List */}
-        {medicos.length === 0 ? (
-          <div className="bg-pequena-background rounded-2xl shadow-lg border border-pequena-secundaria/20 p-12 text-center">
-            <div className="w-16 h-16 bg-pequena-azul/20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-pequena-azul" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-            </div>
-            
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">
-              Nenhum médico cadastrado
-            </h3>
-            <p className="text-gray-600 mb-6">
-              Comece cadastrando os profissionais de saúde que atendem seus bebês.
-            </p>
-            
-            <Button
-              onClick={() => router.push('/medicos/novo')}
-            >
-              Cadastrar Primeiro Médico
-            </Button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {medicos.map((medico) => (
-              <div key={medico.id} className="bg-pequena-background rounded-2xl shadow-lg border border-pequena-secundaria/20 p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="w-12 h-12 bg-pequena-azul/20 rounded-lg flex items-center justify-center">
-                    <svg className="w-6 h-6 text-pequena-azul" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => router.push(`/medicos/${medico.id}`)}
-                    >
-                      Editar
-                    </Button>
-                    
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      loading={deletingId === medico.id}
-                      onClick={() => handleDelete(medico.id)}
-                    >
-                      {deletingId === medico.id ? 'Deletando...' : 'Deletar'}
-                    </Button>
-                  </div>
-                </div>
-
-                <h3 className="text-xl font-semibold text-gray-800 mb-2">
-                  Dr. {medico.nome}
-                </h3>
-
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Especialidade:</span>
-                    <span className="font-medium text-gray-800">
-                      {medico.especialidade}
-                    </span>
-                  </div>
-                  
-                  {medico.crm && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">CRM:</span>
-                      <span className="font-medium text-gray-800">
-                        {medico.crm}
-                      </span>
-                    </div>
-                  )}
-                  
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Telefone:</span>
-                    <span className="font-medium text-gray-800">
-                      {medico.telefone}
-                    </span>
-                  </div>
-                  
-                  {medico.email && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">E-mail:</span>
-                      <span className="font-medium text-gray-800">
-                        {medico.email}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {medico.endereco && (
-                  <div className="mt-4 pt-4 border-t border-gray-200">
-                    <div className="text-sm text-gray-500 mb-1">Endereço:</div>
-                    <div className="text-sm text-gray-800">
-                      {medico.endereco}
-                    </div>
-                  </div>
-                )}
-
-                <div className="mt-4 pt-4 border-t border-gray-200 text-xs text-gray-500">
-                  Cadastrado em: {new Date(medico.created_at).toLocaleDateString('pt-BR')}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        {/* Content */}
+        <DataTable
+          columns={tableColumns}
+          data={medicos}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          loading={loading}
+          emptyMessage="Nenhum médico cadastrado"
+          emptyIcon={<DoctorIcon />}
+          emptyAction={{
+            label: 'Cadastrar Primeiro Médico',
+            onClick: () => router.push('/medicos/novo')
+          }}
+        />
       </div>
-    </div>
+    </DashboardLayout>
   )
 } 

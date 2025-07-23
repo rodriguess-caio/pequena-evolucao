@@ -6,6 +6,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { InputField } from '@/components/ui/InputField'
 import { Button } from '@/components/ui/Button'
+import { DashboardLayout } from '@/components/layout/DashboardLayout'
 import { updateProfileSchema, type UpdateProfileFormData } from '@/lib/validations/auth'
 
 interface User {
@@ -102,32 +103,25 @@ export default function ProfilePage() {
         method: 'DELETE',
       })
 
-      const result = await response.json()
-
       if (response.ok) {
-        // Redirecionar para login após deletar conta
+        // Redirecionar para logout após deletar conta
         router.push('/')
       } else {
+        const result = await response.json()
         setError(result.error || 'Erro ao deletar conta')
-        setShowDeleteConfirm(false)
       }
     } catch (err) {
       setError('Erro ao deletar conta')
-      setShowDeleteConfirm(false)
     } finally {
       setIsDeleting(false)
+      setShowDeleteConfirm(false)
     }
   }
 
   const handleLogout = async () => {
     try {
-      const response = await fetch('/api/auth/logout', {
-        method: 'POST',
-      })
-
-      if (response.ok) {
-        router.push('/')
-      }
+      await fetch('/api/auth/logout', { method: 'POST' })
+      router.push('/')
     } catch (error) {
       console.error('Erro ao fazer logout:', error)
     }
@@ -135,10 +129,12 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-pequena-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pequena-secundaria mx-auto mb-4"></div>
-          <p className="text-gray-600">Carregando perfil...</p>
+      <div className="h-screen flex bg-pequena-background">
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pequena-secundaria mx-auto mb-4"></div>
+            <p className="text-gray-600">Carregando perfil...</p>
+          </div>
         </div>
       </div>
     )
@@ -149,34 +145,22 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-pequena-background">
-      <div className="container mx-auto px-4 py-8">
+    <DashboardLayout 
+      user={user}
+      title="Meu Perfil"
+      subtitle="Gerencie suas informações pessoais"
+    >
+      <div className="p-6">
         {/* Header */}
-        <div className="bg-pequena-background rounded-2xl shadow-lg border border-pequena-secundaria/20 p-6 mb-8">
+        <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-800 mb-2">
+              <h1 className="text-2xl font-bold text-gray-900 mb-2">
                 Meu Perfil
               </h1>
               <p className="text-gray-600">
                 Gerencie suas informações pessoais
               </p>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <Button
-                variant="outline"
-                onClick={() => router.push('/dashboard')}
-              >
-                Voltar ao Dashboard
-              </Button>
-
-              <Button
-                variant="outline"
-                onClick={handleLogout}
-              >
-                Sair
-              </Button>
             </div>
           </div>
         </div>
@@ -185,7 +169,7 @@ export default function ProfilePage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Profile Form */}
           <div className="lg:col-span-2">
-            <div className="bg-pequena-background rounded-2xl shadow-lg border border-pequena-secundaria/20 p-6">
+            <div className="bg-pequena-background rounded-xl shadow-sm border border-gray-200 p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold text-gray-800">
                   Informações Pessoais
@@ -300,7 +284,7 @@ export default function ProfilePage() {
           {/* Account Actions */}
           <div className="space-y-6">
             {/* Account Info */}
-            <div className="bg-pequena-background rounded-2xl shadow-lg border border-pequena-secundaria/20 p-6">
+            <div className="bg-pequena-background rounded-xl shadow-sm border border-gray-200 p-6">
               <h3 className="text-lg font-semibold text-gray-800 mb-4">
                 Informações da Conta
               </h3>
@@ -319,7 +303,7 @@ export default function ProfilePage() {
             </div>
 
             {/* Danger Zone */}
-            <div className="bg-red-50 rounded-2xl shadow-lg border border-red-200 p-6">
+            <div className="bg-red-50 rounded-xl shadow-sm border border-red-200 p-6">
               <h3 className="text-lg font-semibold text-red-800 mb-4">
                 Zona de Perigo
               </h3>
@@ -342,7 +326,7 @@ export default function ProfilePage() {
         {/* Delete Confirmation Modal */}
         {showDeleteConfirm && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4">
+            <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
               <div className="text-center">
                 <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -381,6 +365,6 @@ export default function ProfilePage() {
           </div>
         )}
       </div>
-    </div>
+    </DashboardLayout>
   )
 } 

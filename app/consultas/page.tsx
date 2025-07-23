@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/Button'
+import { DashboardLayout } from '@/components/layout/DashboardLayout'
+import { DataTable } from '@/components/ui/DataTable'
 
 interface Consulta {
   id: string
@@ -26,11 +27,33 @@ export default function ConsultasPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [user, setUser] = useState<any>(null)
   const router = useRouter()
 
   useEffect(() => {
-    fetchConsultas()
-  }, [])
+    const checkUser = async () => {
+      try {
+        const response = await fetch('/api/auth/profile')
+        if (response.ok) {
+          const data = await response.json()
+          setUser(data.user)
+        } else {
+          router.push('/')
+        }
+      } catch (error) {
+        console.error('Erro ao verificar usuário:', error)
+        router.push('/')
+      }
+    }
+
+    checkUser()
+  }, [router])
+
+  useEffect(() => {
+    if (user) {
+      fetchConsultas()
+    }
+  }, [user])
 
   const fetchConsultas = async () => {
     try {
@@ -49,19 +72,19 @@ export default function ConsultasPage() {
     }
   }
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (consulta: Consulta) => {
     if (!confirm('Tem certeza que deseja deletar esta consulta? Esta ação é irreversível.')) {
       return
     }
 
-    setDeletingId(id)
+    setDeletingId(consulta.id)
     try {
-      const response = await fetch(`/api/consultas/${id}`, {
+      const response = await fetch(`/api/consultas/${consulta.id}`, {
         method: 'DELETE',
       })
 
       if (response.ok) {
-        setConsultas(consultas.filter(consulta => consulta.id !== id))
+        setConsultas(consultas.filter(c => c.id !== consulta.id))
       } else {
         const data = await response.json()
         setError(data.error || 'Erro ao deletar consulta')
@@ -72,6 +95,10 @@ export default function ConsultasPage() {
     } finally {
       setDeletingId(null)
     }
+  }
+
+  const handleEdit = (consulta: Consulta) => {
+    router.push(`/consultas/${consulta.id}`)
   }
 
   const getStatusColor = (status: string) => {
@@ -104,6 +131,60 @@ export default function ConsultasPage() {
     }
   }
 
+  const tableColumns = [
+    {
+      key: 'medico_nome',
+      label: 'Médico',
+      render: (value: string, item: Consulta) => (
+        <div>
+          <div className="font-medium text-gray-900">Dr. {value}</div>
+          <div className="text-sm text-gray-500">{item.medico_especialidade}</div>
+        </div>
+      )
+    },
+    {
+      key: 'bebe_nome',
+      label: 'Bebê',
+      render: (value: string) => (
+        <span className="font-medium text-gray-900">{value}</span>
+      )
+    },
+    {
+      key: 'data_consulta',
+      label: 'Data',
+      render: (value: string, item: Consulta) => (
+        <div>
+          <div className="font-medium text-gray-900">
+            {new Date(value).toLocaleDateString('pt-BR')}
+          </div>
+          <div className="text-sm text-gray-500">{item.hora_consulta}</div>
+        </div>
+      )
+    },
+    {
+      key: 'local',
+      label: 'Local',
+      render: (value: string) => (
+        <span className="text-gray-900">{value}</span>
+      )
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      render: (value: string) => (
+        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(value)}`}>
+          {getStatusText(value)}
+        </span>
+      )
+    }
+  ]
+
+  const CalendarIcon = () => (
+    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+    </svg>
+  )
+
   if (loading) {
     return (
       <div className="min-h-screen bg-pequena-background flex items-center justify-center">
@@ -116,35 +197,21 @@ export default function ConsultasPage() {
   }
 
   return (
-    <div className="min-h-screen bg-pequena-background">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="bg-pequena-background rounded-2xl shadow-lg border border-pequena-secundaria/20 p-6 mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-800 mb-2">
-                Minhas Consultas
-              </h1>
-              <p className="text-gray-600">
-                Gerencie o histórico de consultas médicas
-              </p>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <Button
-                variant="outline"
-                onClick={() => router.push('/dashboard')}
-              >
-                Voltar ao Dashboard
-              </Button>
-
-              <Button
-                onClick={() => router.push('/consultas/nova')}
-              >
-                Agendar Consulta
-              </Button>
-            </div>
-          </div>
+    <DashboardLayout 
+      user={user} 
+      title="Minhas Consultas"
+      subtitle="Gerencie o histórico de consultas médicas"
+    >
+      <div className="p-6 max-w-7xl mx-auto">
+        {/* Action Button */}
+        <div className="mb-6 flex justify-end">
+          <button
+            onClick={() => router.push('/consultas/nova')}
+            className="bg-pequena-secundaria text-white px-4 py-2 rounded-lg hover:bg-opacity-90 transition-colors flex items-center gap-2"
+          >
+            <CalendarIcon />
+            Agendar Consulta
+          </button>
         </div>
 
         {/* Error Message */}
@@ -154,133 +221,21 @@ export default function ConsultasPage() {
           </div>
         )}
 
-        {/* Consultas List */}
-        {consultas.length === 0 ? (
-          <div className="bg-pequena-background rounded-2xl shadow-lg border border-pequena-secundaria/20 p-12 text-center">
-            <div className="w-16 h-16 bg-pequena-azul/20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-pequena-azul" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-            </div>
-            
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">
-              Nenhuma consulta agendada
-            </h3>
-            <p className="text-gray-600 mb-6">
-              Comece agendando consultas médicas para seus bebês.
-            </p>
-            
-            <Button
-              onClick={() => router.push('/consultas/nova')}
-            >
-              Agendar Primeira Consulta
-            </Button>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {consultas.map((consulta) => (
-              <div key={consulta.id} className="bg-pequena-background rounded-2xl shadow-lg border border-pequena-secundaria/20 p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-pequena-azul/20 rounded-lg flex items-center justify-center">
-                      <svg className="w-6 h-6 text-pequena-azul" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                    
-                    <div>
-                      <h3 className="text-xl font-semibold text-gray-800">
-                        Consulta com Dr. {consulta.medico_nome}
-                      </h3>
-                      <p className="text-gray-600">
-                        {consulta.medico_especialidade}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => router.push(`/consultas/${consulta.id}`)}
-                    >
-                      Editar
-                    </Button>
-                    
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      loading={deletingId === consulta.id}
-                      onClick={() => handleDelete(consulta.id)}
-                    >
-                      {deletingId === consulta.id ? 'Deletando...' : 'Deletar'}
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-                  <div>
-                    <div className="text-sm text-gray-500 mb-1">Bebê:</div>
-                    <div className="font-medium text-gray-800">
-                      {consulta.bebe_nome}
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <div className="text-sm text-gray-500 mb-1">Data:</div>
-                    <div className="font-medium text-gray-800">
-                      {new Date(consulta.data_consulta).toLocaleDateString('pt-BR')}
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <div className="text-sm text-gray-500 mb-1">Horário:</div>
-                    <div className="font-medium text-gray-800">
-                      {consulta.hora_consulta}
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <div className="text-sm text-gray-500 mb-1">Status:</div>
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(consulta.status)}`}>
-                      {getStatusText(consulta.status)}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="mb-4">
-                  <div className="text-sm text-gray-500 mb-1">Local:</div>
-                  <div className="font-medium text-gray-800">
-                    {consulta.local}
-                  </div>
-                </div>
-
-                {consulta.anotacoes && (
-                  <div className="mb-4">
-                    <div className="text-sm text-gray-500 mb-1">Anotações:</div>
-                    <div className="text-gray-800 bg-gray-50 rounded-lg p-3">
-                      {consulta.anotacoes}
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                  <div className="text-xs text-gray-500">
-                    Agendada em: {new Date(consulta.created_at).toLocaleDateString('pt-BR')}
-                  </div>
-                  
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                    </svg>
-                    {consulta.medico_telefone}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        {/* Content */}
+        <DataTable
+          columns={tableColumns}
+          data={consultas}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          loading={loading}
+          emptyMessage="Nenhuma consulta agendada"
+          emptyIcon={<CalendarIcon />}
+          emptyAction={{
+            label: 'Agendar Primeira Consulta',
+            onClick: () => router.push('/consultas/nova')
+          }}
+        />
       </div>
-    </div>
+    </DashboardLayout>
   )
 } 

@@ -28,7 +28,7 @@ export function AuthLayout({ children, title, subtitle }: AuthLayoutProps) {
           </div>
 
           {/* Card do formulário */}
-          <div className="bg-pequena-background rounded-2xl shadow-lg border border-pequena-secundaria/20 p-8">
+          <div className="bg-pequena-background rounded-2xl shadow-lg border border-gray-200 p-8">
             {children}
           </div>
 
