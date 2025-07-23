@@ -24,7 +24,8 @@ module.exports = {
           verde: '#8FDDB8',
           lavanda: '#D3B7E7',
           background: '#F8F6ED', // Cor de fundo uniforme com a logo
-          secundaria: '#28C1AD', // Cor secundária para botões
+          secondary: '#28C1AD', // Cor secundária para botões
+          secundaria: '#28C1AD', // Cor secundária para botões (mantido para compatibilidade)
         },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

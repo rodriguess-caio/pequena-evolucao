@@ -50,6 +50,7 @@ export default function DashboardPage() {
   const [bebesCount, setBebesCount] = useState(0)
   const [consultasCount, setConsultasCount] = useState(0)
   const [medicosCount, setMedicosCount] = useState(0)
+  const [vaccinesCount, setVaccinesCount] = useState(0)
   const router = useRouter()
 
   const ageRanges: AgeRange[] = [
@@ -102,26 +103,32 @@ export default function DashboardPage() {
 
   const fetchDashboardData = async () => {
     try {
-      // Buscar contadores do dashboard
-      const [bebesResponse, consultasResponse, medicosResponse] = await Promise.all([
-        fetch('/api/bebes'),
-        fetch('/api/consultas'),
-        fetch('/api/medicos')
-      ])
-
+      // Buscar contagem de bebês
+      const bebesResponse = await fetch('/api/bebes')
       if (bebesResponse.ok) {
         const bebesData = await bebesResponse.json()
-        setBebesCount(bebesData.bebes?.length || 0)
+        setBebesCount(bebesData.bebes.length)
       }
 
+      // Buscar contagem de consultas
+      const consultasResponse = await fetch('/api/consultas')
       if (consultasResponse.ok) {
         const consultasData = await consultasResponse.json()
-        setConsultasCount(consultasData.consultas?.length || 0)
+        setConsultasCount(consultasData.consultas.length)
       }
 
+      // Buscar contagem de médicos
+      const medicosResponse = await fetch('/api/medicos')
       if (medicosResponse.ok) {
         const medicosData = await medicosResponse.json()
-        setMedicosCount(medicosData.medicos?.length || 0)
+        setMedicosCount(medicosData.medicos.length)
+      }
+
+      // Buscar contagem de vacinas pendentes
+      const vaccinesResponse = await fetch('/api/vaccines/schedule')
+      if (vaccinesResponse.ok) {
+        const vaccinesData = await vaccinesResponse.json()
+        setVaccinesCount(vaccinesData.stats?.pending || 0)
       }
     } catch (error) {
       console.error('Erro ao buscar dados do dashboard:', error)
@@ -198,7 +205,7 @@ export default function DashboardPage() {
     >
       <div className="p-6 max-w-7xl mx-auto">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
           <div className="bg-pequena-background rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center">
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -264,6 +271,28 @@ export default function DashboardPage() {
               </Button>
             )}
           </div>
+
+          <div className="bg-pequena-background rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center">
+              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                </svg>
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Vacinas Pendentes</p>
+                <p className="text-2xl font-bold text-gray-900">{vaccinesCount}</p>
+              </div>
+            </div>
+            {vaccinesCount > 0 && (
+              <Button 
+                onClick={() => router.push('/vacinas')}
+                className="mt-4 w-full bg-pequena-secundaria"
+              >
+                Ver Calendário
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Development Charts Section */}
@@ -292,7 +321,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Charts Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
               <DevelopmentChart
                 data={developmentData}
                 type="peso"

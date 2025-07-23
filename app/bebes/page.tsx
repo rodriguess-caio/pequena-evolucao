@@ -206,15 +206,16 @@ export default function BebesPage() {
       title="Meus Bebês"
       subtitle="Gerencie as informações dos seus bebês"
     >
-      <div className="p-6 max-w-7xl mx-auto">
+      <div className="p-4 sm:p-6 max-w-7xl mx-auto">
         {/* Action Button */}
-        <div className="mb-6 flex justify-end">
+        <div className="mb-4 sm:mb-6 flex justify-end">
           <button
             onClick={() => router.push('/bebes/novo')}
-            className="bg-pequena-secundaria text-white px-4 py-2 rounded-lg hover:bg-opacity-90 transition-colors flex items-center gap-2"
+            className="bg-pequena-secundaria text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-opacity-90 transition-colors flex items-center gap-2 text-sm sm:text-base"
           >
             <PlusIcon />
-            Adicionar Bebê
+            <span className="hidden sm:inline">Adicionar Bebê</span>
+            <span className="sm:hidden">Adicionar</span>
           </button>
         </div>
 

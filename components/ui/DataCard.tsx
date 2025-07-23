@@ -51,23 +51,24 @@ export function DataCard({
   }
 
   return (
-    <div className={`bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow ${className}`}>
-      <div className="flex items-start justify-between mb-4">
+    <div className={`bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 hover:shadow-md transition-shadow ${className}`}>
+      <div className="flex items-start justify-between mb-3 sm:mb-4">
         {icon && (
-          <div className={`w-12 h-12 ${iconBgColor} rounded-lg flex items-center justify-center`}>
-            <div className={`w-6 h-6 ${iconColor}`}>
+          <div className={`w-10 h-10 sm:w-12 sm:h-12 ${iconBgColor} rounded-lg flex items-center justify-center flex-shrink-0`}>
+            <div className={`w-5 h-5 sm:w-6 sm:h-6 ${iconColor}`}>
               {icon}
             </div>
           </div>
         )}
         
         {(onEdit || onDelete || onView) && (
-          <div className="flex gap-2">
+          <div className="flex gap-1 sm:gap-2">
             {onView && (
               <Button
                 variant="outline"
                 size="sm"
                 onClick={onView}
+                className="text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2"
               >
                 Ver
               </Button>
@@ -77,6 +78,7 @@ export function DataCard({
                 variant="outline"
                 size="sm"
                 onClick={onEdit}
+                className="text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2"
               >
                 Editar
               </Button>
@@ -86,6 +88,7 @@ export function DataCard({
                 variant="destructive"
                 size="sm"
                 onClick={onDelete}
+                className="text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2"
               >
                 Deletar
               </Button>
@@ -94,7 +97,7 @@ export function DataCard({
         )}
       </div>
 
-      <h3 className="text-xl font-semibold text-gray-800 mb-1">
+      <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-1">
         {title}
       </h3>
       

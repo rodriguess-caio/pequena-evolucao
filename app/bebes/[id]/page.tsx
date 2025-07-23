@@ -245,10 +245,16 @@ export default function EditarBebePage() {
 
               <FormField label="Tipo Sanguíneo" required error={errors.tipo_sanguineo?.message}>
                 <Select
-                  options={tiposSanguineos}
                   placeholder="Selecione o tipo sanguíneo"
                   {...register('tipo_sanguineo')}
-                />
+                >
+                  <option value="">Selecione o tipo sanguíneo</option>
+                  {tiposSanguineos.map((tipo) => (
+                    <option key={tipo.value} value={tipo.value}>
+                      {tipo.label}
+                    </option>
+                  ))}
+                </Select>
               </FormField>
 
               <FormField label="Local de Nascimento" required error={errors.local_nascimento?.message}>

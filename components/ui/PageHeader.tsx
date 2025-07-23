@@ -1,50 +1,34 @@
 'use client'
 
 import { ReactNode } from 'react'
-import { Button } from './Button'
 
 interface PageHeaderProps {
   title: string
   subtitle?: string
-  action?: {
-    label: string
-    onClick: () => void
-    icon?: ReactNode
-  }
   children?: ReactNode
+  className?: string
 }
 
-export function PageHeader({ title, subtitle, action, children }: PageHeaderProps) {
+export function PageHeader({ title, subtitle, children, className = '' }: PageHeaderProps) {
   return (
-    <div className="mb-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+    <div className={`mb-6 sm:mb-8 ${className}`}>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 truncate">
             {title}
           </h1>
           {subtitle && (
-            <p className="text-gray-600 text-lg">
+            <p className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2 truncate">
               {subtitle}
             </p>
           )}
         </div>
-
-        {action && (
-          <Button
-            onClick={action.onClick}
-            className="flex items-center gap-2"
-          >
-            {action.icon && action.icon}
-            {action.label}
-          </Button>
+        {children && (
+          <div className="flex-shrink-0">
+            {children}
+          </div>
         )}
       </div>
-      
-      {children && (
-        <div className="mt-6">
-          {children}
-        </div>
-      )}
     </div>
   )
 } 

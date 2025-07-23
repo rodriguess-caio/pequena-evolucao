@@ -245,7 +245,8 @@ export function DataTable({
 
   return (
     <div className="bg-pequena-background rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-      <div className="overflow-x-auto">
+      {/* Desktop table */}
+      <div className="hidden md:block overflow-x-auto">
         <table className="w-full">
           <thead className="bg-pequena-background border-b border-gray-200">
             <tr>
@@ -293,6 +294,66 @@ export function DataTable({
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile cards */}
+      <div className="md:hidden">
+        {data.map((item, index) => (
+          <div key={item.id || index} className="p-4 border-b border-gray-200 last:border-b-0 hover:bg-gray-50/50 transition-colors">
+            <div className="space-y-4">
+              {/* Primary info - always visible */}
+              <div className="flex justify-between items-start">
+                <div className="flex-1 min-w-0">
+                  {columns.slice(0, 2).map((column) => (
+                    <div key={column.key} className="mb-2 last:mb-0">
+                      <span className="text-xs font-medium text-gray-500 uppercase tracking-wider block mb-1">
+                        {column.label}
+                      </span>
+                      <div className="text-sm font-medium text-gray-900">
+                        {column.render 
+                          ? column.render(item[column.key], item)
+                          : item[column.key]
+                        }
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {hasActions && (
+                  <div className="flex-shrink-0 ml-3">
+                    <OptionsMenu
+                      item={item}
+                      actions={actions}
+                      onEdit={onEdit}
+                      onDelete={onDelete}
+                      onView={onView}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Secondary info - in a more compact format */}
+              {columns.length > 2 && (
+                <div className="pt-3 border-t border-gray-100">
+                  <div className="grid grid-cols-2 gap-3">
+                    {columns.slice(2).map((column) => (
+                      <div key={column.key} className="space-y-1">
+                        <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          {column.label}
+                        </span>
+                        <div className="text-sm text-gray-700">
+                          {column.render 
+                            ? column.render(item[column.key], item)
+                            : item[column.key]
+                          }
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   )

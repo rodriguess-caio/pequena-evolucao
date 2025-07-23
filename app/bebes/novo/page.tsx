@@ -105,7 +105,7 @@ export default function NovoBebePage() {
       title="Cadastrar Bebê"
       subtitle="Adicione as informações do seu bebê"
     >
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <FormCard
           title="Cadastrar Novo Bebê"
           subtitle="Preencha as informações básicas do seu bebê"
@@ -147,10 +147,16 @@ export default function NovoBebePage() {
 
               <FormField label="Tipo Sanguíneo" required error={errors.tipo_sanguineo?.message}>
                 <Select
-                  options={tiposSanguineos}
                   placeholder="Selecione o tipo sanguíneo"
                   {...register('tipo_sanguineo')}
-                />
+                >
+                  <option value="">Selecione o tipo sanguíneo</option>
+                  {tiposSanguineos.map((tipo) => (
+                    <option key={tipo.value} value={tipo.value}>
+                      {tipo.label}
+                    </option>
+                  ))}
+                </Select>
               </FormField>
 
               <FormField label="Local de Nascimento" required error={errors.local_nascimento?.message}>

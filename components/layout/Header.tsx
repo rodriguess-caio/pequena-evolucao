@@ -13,9 +13,10 @@ interface HeaderProps {
   user: User
   title?: string
   subtitle?: string
+  onMenuClick?: () => void
 }
 
-export function Header({ user, title = 'Dashboard', subtitle }: HeaderProps) {
+export function Header({ user, title = 'Dashboard', subtitle, onMenuClick }: HeaderProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -79,43 +80,54 @@ export function Header({ user, title = 'Dashboard', subtitle }: HeaderProps) {
   ]
 
   return (
-    <header className="bg-pequena-background border-b border-gray-200 px-6 py-4">
-      <div className="flex items-center justify-between">
-        {/* Left side - Page title and subtitle */}
-        <div className="flex items-center gap-2">
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+    <header className="bg-pequena-background border-b border-gray-200 px-4 lg:px-6 py-4">
+      <div className="flex items-center justify-between gap-4">
+        {/* Left side - Menu button and page title */}
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          {/* Mobile menu button */}
+          <button
+            onClick={onMenuClick}
+            className="lg:hidden p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+
+          {/* Page title and subtitle */}
+          <div className="min-w-0 flex-1 max-w-xs sm:max-w-sm lg:max-w-md">
+            <h2 className="text-base lg:text-lg font-semibold text-gray-900 truncate">{title}</h2>
             {subtitle && (
-              <p className="text-sm text-gray-600">{subtitle}</p>
+              <p className="text-xs lg:text-sm text-gray-600 truncate">{subtitle}</p>
             )}
           </div>
         </div>
 
         {/* Right side - User menu */}
-        <div className="relative" ref={dropdownRef}>
+        <div className="relative flex-shrink-0" ref={dropdownRef}>
           <button
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/50 transition-colors duration-200"
+            className="flex items-center gap-2 lg:gap-3 px-2 lg:px-3 py-2 rounded-lg hover:bg-white/50 transition-colors duration-200"
           >
             {/* User avatar */}
-            <div className="w-8 h-8 bg-gradient-to-br from-pequena-azul to-pequena-secundaria rounded-full flex items-center justify-center">
+            <div className="w-8 h-8 bg-gradient-to-br from-pequena-azul to-pequena-secundaria rounded-full flex items-center justify-center flex-shrink-0">
               <span className="text-sm font-medium text-white">
                 {user?.name ? user.name.charAt(0).toUpperCase() : user?.email?.charAt(0).toUpperCase() || 'U'}
               </span>
             </div>
 
-            {/* User info */}
-            <div className="text-left">
-              <p className="text-sm font-medium text-gray-900">
+            {/* User info - hidden on mobile */}
+            <div className="hidden lg:block text-left min-w-0">
+              <p className="text-sm font-medium text-gray-900 truncate">
                 {user?.name || 'Usuário'}
               </p>
-              <p className="text-xs text-gray-500">{user?.email || 'carregando...'}</p>
+              <p className="text-xs text-gray-500 truncate">{user?.email || 'carregando...'}</p>
             </div>
 
-            {/* Dropdown arrow */}
+            {/* Dropdown arrow - hidden on mobile */}
             <svg
               className={cn(
-                'w-4 h-4 text-gray-400 transition-transform duration-200',
+                'hidden lg:block w-4 h-4 text-gray-400 transition-transform duration-200 flex-shrink-0',
                 isDropdownOpen && 'rotate-180'
               )}
               fill="none"
